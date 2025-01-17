@@ -1,0 +1,63 @@
+services:
+  frontend:
+    image: ghcr.io/cryptomonitorasw-spe/vue-frontend:latest
+    container_name: vue-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80" # Host port 8080 maps to container port 80 (Nginx)
+    networks:
+      - esterna
+      - interna
+
+  backend:
+    image: ghcr.io/cryptomonitorasw-spe/node-backend:latest
+    container_name: nodejs-backend
+    restart: unless-stopped
+    environment:
+      - MIAVAR=non_serve__solo_come_esempio
+      - MONGO_URI=mongodb://mongodb:27017/dbsa
+    ports:
+      - "3000:3000" # Expose backend API
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - interna
+      - esterna
+
+  mongodb:
+    build:
+      context: ./mongodb
+      dockerfile: Dockerfile
+      args:
+        IMAGE_VERSION: non_serve # Corrected from list to mapping
+    image: mymongo
+    container_name: mongodb
+    command: [ "docker-entrypoint.sh", "mongod" ]
+    restart: always
+    healthcheck:
+      test: |
+        host=`hostname --ip-address || echo '127.0.0.1'`;
+        mongo --quiet $${host}/test --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)' && echo 0 || echo 1
+      interval: 5s
+      retries: 3
+    environment:
+      - MIAVAR=non_serve3__solo_come_esempio
+      - MONGO_INITDB_DATABASE=dbsa
+    networks:
+      - interna
+
+networks:
+  interna:
+    driver: bridge
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.name: "br-interna89012"
+      com.docker.network.enable_ipv6: "false"
+  esterna:
+    driver: bridge
+    internal: false
+    driver_opts:
+      com.docker.network.bridge.name: "br-esterna89012"
+      com.docker.network.enable_ipv6: "false"
+
