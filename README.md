@@ -1,9 +1,11 @@
-Prima CREA IMMAGINE MONGO
-Poi DOCKER COMPOSE UP -D
+## CREA IMMAGINE MONGO
+con ./CREATE_NOVOLUME_BASE_IMAGE
 
-PER RUNNARE LOCALMENTE COI PROGETTI
+## RUNNA PROGETTI DAI PACKAGE
+docker compose up -d
 
-CLONA i microservizi direttamente nella repository
+## RUNNA PROGETTI LOCALMENTE
+
+### METTI I PROGETTI IN src/
 
 docker-compose -f docker-composelocale.yml up
-
