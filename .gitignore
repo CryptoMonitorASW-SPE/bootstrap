@@ -25,7 +25,6 @@ Thumbs.db
 *.log
 
 # Repo
-vue-frontend/
-node-backend/
+/src/
 
-
+.env
