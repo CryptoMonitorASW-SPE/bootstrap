@@ -14,7 +14,7 @@ services:
     crypto-market:
       build:
         context: ./src/crypto-market
-        dockerfile: Dockerfile  # Optional if your Dockerfile is named 'Dockerfile'
+        dockerfile: Dockerfile  
       container_name: crypto-market
       restart: unless-stopped
       environment:
@@ -29,17 +29,14 @@ services:
         - esterna
 
 
-    backend:
+    event-dispatcher:
       build:
         context: ./src/event-dispatcher
-        dockerfile: Dockerfile  # Optional if your Dockerfile is named 'Dockerfile'
+        dockerfile: Dockerfile
       container_name: event-dispatcher
       restart: unless-stopped
-      environment:
-        - MIAVAR=non_serve__solo_come_esempio
-        - MONGO_URI=mongodb://mongodb:27017/dbsa
       ports:
-        - "3000:3000" # Expose backend API
+        - "3000:3000"
       depends_on:
         mongodb:
           condition: service_healthy
