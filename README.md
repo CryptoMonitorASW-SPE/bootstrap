@@ -9,3 +9,5 @@ docker compose up -d
 ### METTI I PROGETTI IN src/
 
 docker-compose -f docker-composelocale.yml up
+
+SE SI CAMBIA QUALCOSA BISOGNA AGGIUNGERE --build

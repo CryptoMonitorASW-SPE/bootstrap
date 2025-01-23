@@ -44,6 +44,23 @@ services:
         - interna
         - esterna
 
+    # authentication:
+    #   build:
+    #     context: ./src/authentication
+    #     dockerfile: Dockerfile
+    #   container_name: authentication
+    #   restart: unless-stopped
+    #   environment:
+    #     - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+    #   ports:
+    #     - "3001:3000"
+    #   depends_on:
+    #      mongodb:
+    #         condition: service_healthy  
+    #   networks:
+    #     - interna
+    #     - esterna      
+
     mongodb:
       build:
         context: ./mongodb
