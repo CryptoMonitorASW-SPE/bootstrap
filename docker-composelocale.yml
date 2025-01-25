@@ -8,7 +8,9 @@ services:
         ports:
           - "8080:80" # Host port 8080 maps to container port 80 (Nginx)
         depends_on:
-          - event-dispatcher
+          event-dispatcher:
+            condition: service_healthy
+
         networks:
           - esterna
           - interna
@@ -22,6 +24,7 @@ services:
       environment:
         - COINGECKO_API_KEY=${COINGECKO_API_KEY}
       ports:
+        # You can access the service on localhost:8081, but it will be forwarded to the container's port 8080
         - "8081:8080"
       depends_on:
         mongodb:
@@ -29,6 +32,12 @@ services:
       networks:
         - interna
         - esterna
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+        interval: 5s
+        timeout: 5s
+        retries: 3
+        start_period: 5s
 
 
     event-dispatcher:
@@ -39,35 +48,44 @@ services:
       restart: unless-stopped
       ports:
         - "3000:3000"
+      depends_on:
+        crypto-market:
+          condition: service_healthy  
+        authentication:
+          condition: service_healthy  
+      networks:
+        - interna
+        - esterna
       healthcheck:
         test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
         interval: 5s
         timeout: 5s
         retries: 3
-        start_period: 5s
+        start_period: 5s  
+
+    authentication:
+      build:
+        context: ./src/authentication
+        dockerfile: Dockerfile
+      container_name: authentication
+      restart: unless-stopped
+      environment:
+        - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+      ports:
+        - "3001:3000"
       depends_on:
-        mongodb:
-          condition: service_healthy
+         mongodb:
+            condition: service_healthy  
       networks:
         - interna
         - esterna
-
-    # authentication:
-    #   build:
-    #     context: ./src/authentication
-    #     dockerfile: Dockerfile
-    #   container_name: authentication
-    #   restart: unless-stopped
-    #   environment:
-    #     - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
-    #   ports:
-    #     - "3001:3000"
-    #   depends_on:
-    #      mongodb:
-    #         condition: service_healthy  
-    #   networks:
-    #     - interna
-    #     - esterna      
+      healthcheck:
+        test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
+        interval: 5s
+        timeout: 5s
+        retries: 3
+        start_period: 5s    
+   
 
     mongodb:
       build:
