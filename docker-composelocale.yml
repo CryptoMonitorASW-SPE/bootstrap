@@ -1,4 +1,4 @@
-common-env-variables: &common-env-variables
+x-common-env-variables: &common-env-variables
   AUTHENTICATION_SERVICE_NAME: authentication
   AUTHENTICATION_SERVICE_PORT: 3000
 
