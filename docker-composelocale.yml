@@ -1,4 +1,4 @@
-common-env-variables:
+common-env-variables: &common-env-variables
   AUTHENTICATION_SERVICE_NAME: authentication
   AUTHENTICATION_SERVICE_PORT: 3000
 
@@ -18,6 +18,10 @@ services:
         networks:
           - esterna
           - interna
+        
+        environment:
+          <<: *common-env-variables
+
 
     crypto-market:
       build:
