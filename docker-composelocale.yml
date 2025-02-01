@@ -67,6 +67,8 @@ services:
           condition: service_healthy  
         user-management:
           condition: service_healthy
+        notification:
+          condition: service_healthy  
       networks:
         - interna
         - esterna
@@ -123,6 +125,31 @@ services:
         retries: 3
         start_period: 5s
    
+    notification:
+      build:
+        context: ./src/notification
+        dockerfile: Dockerfile  
+      container_name: notification
+      restart: unless-stopped
+      environment:
+        - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+      ports:
+        # You can access by the host on localhost:8082, but it will be forwarded to the container's port 8080,
+        # inside docker network is notification:8080
+        - "8082:8080"
+      depends_on:
+        mongodb:
+          condition: service_healthy
+      networks:
+        - interna
+        - esterna
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+        interval: 5s
+        timeout: 5s
+        retries: 3
+        start_period: 5s      
+
 
     mongodb:
       build:
