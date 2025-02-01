@@ -3,6 +3,8 @@ x-common-env-variables: &common-env-variables
   AUTHENTICATION_SERVICE_PORT: 3000
   CRYPTOMARKET_SERVICE_NAME: crypto-market
   CRYPTOMARKET_SERVICE_PORT: 8080
+  USER_MANAGEMENT_SERVICE_NAME: user-management
+  USER_MANAGEMENT_SERVICE_PORT: 3000
 
 services:
     frontend:
@@ -63,6 +65,8 @@ services:
           condition: service_healthy  
         authentication:
           condition: service_healthy  
+        user-management:
+          condition: service_healthy
       networks:
         - interna
         - esterna
@@ -95,6 +99,29 @@ services:
         timeout: 5s
         retries: 3
         start_period: 5s    
+
+    user-management:
+      build:
+        context: ./src/user-management
+        dockerfile: Dockerfile
+      container_name: user-management
+      restart: unless-stopped
+      environment:
+        - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+      ports:
+        - "3002:3000"
+      depends_on:
+        mongodb:
+          condition: service_healthy
+      networks:
+        - interna
+        - esterna
+      healthcheck:
+        test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
+        interval: 5s
+        timeout: 5s
+        retries: 3
+        start_period: 5s
    
 
     mongodb:
