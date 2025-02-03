@@ -87,6 +87,8 @@ services:
       restart: unless-stopped
       environment:
         - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+        - USER_MANAGEMENT_SERVICE_NAME=${USER_MANAGEMENT_SERVICE_NAME}
+        - USER_MANAGEMENT_SERVICE_PORT=${USER_MANAGEMENT_SERVICE_PORT}
       ports:
         - "3001:3000"
       depends_on:
