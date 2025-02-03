@@ -5,6 +5,8 @@ x-common-env-variables: &common-env-variables
   CRYPTOMARKET_SERVICE_PORT: 8080
   USER_MANAGEMENT_SERVICE_NAME: user-management
   USER_MANAGEMENT_SERVICE_PORT: 3000
+  EVENT_DISPATCHER_SERVICE_NAME: event-dispatcher
+  EVENT_DISPATCHER_SERVICE_PORT: 3000
 
 services:
     frontend:
@@ -60,6 +62,8 @@ services:
       restart: unless-stopped
       ports:
         - "3000:3000"
+      environment:
+        - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
       depends_on:
         crypto-market:
           condition: service_healthy  
@@ -174,6 +178,7 @@ services:
         - MONGO_INITDB_DATABASE=dbsa
       networks:
         - interna
+
 
 networks:
   interna:
