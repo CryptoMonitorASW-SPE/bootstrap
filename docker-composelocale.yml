@@ -5,6 +5,8 @@ x-common-env-variables: &common-env-variables
   CRYPTOMARKET_SERVICE_PORT: 8080
   USER_MANAGEMENT_SERVICE_NAME: user-management
   USER_MANAGEMENT_SERVICE_PORT: 3000
+  NOTIFICATION_SERVICE_NAME: notification
+  NOTIFICATION_SERVICE_PORT: 8080
   EVENT_DISPATCHER_SERVICE_NAME: event-dispatcher
   EVENT_DISPATCHER_SERVICE_PORT: 3000
 
@@ -176,8 +178,11 @@ services:
       environment:
         - MIAVAR=non_serve3__solo_come_esempio
         - MONGO_INITDB_DATABASE=dbsa
+      ports:
+        - "27017:27017"
       networks:
         - interna
+        - esterna
 
 
 networks:
