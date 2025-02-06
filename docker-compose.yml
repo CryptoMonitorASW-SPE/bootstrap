@@ -1,3 +1,15 @@
+x-common-env-variables: &common-env-variables
+  AUTHENTICATION_SERVICE_NAME: authentication
+  AUTHENTICATION_SERVICE_PORT: 3000
+  CRYPTOMARKET_SERVICE_NAME: crypto-market
+  CRYPTOMARKET_SERVICE_PORT: 8080
+  USER_MANAGEMENT_SERVICE_NAME: user-management
+  USER_MANAGEMENT_SERVICE_PORT: 3000
+  NOTIFICATION_SERVICE_NAME: notification
+  NOTIFICATION_SERVICE_PORT: 8080
+  EVENT_DISPATCHER_SERVICE_NAME: event-dispatcher
+  EVENT_DISPATCHER_SERVICE_PORT: 3000
+
 services:
   frontend:
     image: ghcr.io/cryptomonitorasw-spe/vue-frontend:latest
@@ -5,47 +17,149 @@ services:
     restart: unless-stopped
     ports:
       - "8080:80" # Host port 8080 maps to container port 80 (Nginx)
+    depends_on:
+      event-dispatcher:
+        condition: service_healthy
     networks:
       - esterna
       - interna
+    environment:
+      <<: *common-env-variables
 
-  backend:
-    image: ghcr.io/cryptomonitorasw-spe/node-backend:latest
-    container_name: nodejs-backend
+  crypto-market:
+    image: ghcr.io/cryptomonitorasw-spe/crypto-market:latest
+    container_name: crypto-market
     restart: unless-stopped
     environment:
-      - MIAVAR=non_serve__solo_come_esempio
-      - MONGO_URI=mongodb://mongodb:27017/dbsa
+      - COINGECKO_API_KEY=${COINGECKO_API_KEY}
     ports:
-      - "3000:3000" # Expose backend API
+      - "8081:8080"
     depends_on:
       mongodb:
         condition: service_healthy
     networks:
       - interna
       - esterna
-
-  mongodb:
-    build:
-      context: ./mongodb
-      dockerfile: Dockerfile
-      args:
-        IMAGE_VERSION: non_serve # Corrected from list to mapping
-    image: mymongo
-    container_name: mongodb
-    command: [ "docker-entrypoint.sh", "mongod" ]
-    restart: always
     healthcheck:
-      test: |
-        host=`hostname --ip-address || echo '127.0.0.1'`;
-        mongo --quiet $${host}/test --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)' && echo 0 || echo 1
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 5s
+      timeout: 5s
       retries: 3
+      start_period: 5s
+
+  event-dispatcher:
+    image: ghcr.io/cryptomonitorasw-spe/event-dispatcher:latest
+    container_name: event-dispatcher
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
-      - MIAVAR=non_serve3__solo_come_esempio
-      - MONGO_INITDB_DATABASE=dbsa
+      - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+    depends_on:
+      crypto-market:
+        condition: service_healthy
+      authentication:
+        condition: service_healthy
+      user-management:
+        condition: service_healthy
+      notification:
+        condition: service_healthy
     networks:
       - interna
+      - esterna
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  authentication:
+    image: ghcr.io/cryptomonitorasw-spe/authentication:latest
+    container_name: authentication
+    restart: unless-stopped
+    environment:
+      - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+      - USER_MANAGEMENT_SERVICE_NAME=${USER_MANAGEMENT_SERVICE_NAME}
+      - USER_MANAGEMENT_SERVICE_PORT=${USER_MANAGEMENT_SERVICE_PORT}
+    ports:
+      - "3001:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - interna
+      - esterna
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  user-management:
+    image: ghcr.io/cryptomonitorasw-spe/user-management:latest
+    container_name: user-management
+    restart: unless-stopped
+    environment:
+      - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+    ports:
+      - "3002:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - interna
+      - esterna
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  notification:
+    image: ghcr.io/cryptomonitorasw-spe/notification:latest
+    container_name: notification
+    restart: unless-stopped
+    environment:
+      - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
+    ports:
+      - "8082:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - interna
+      - esterna
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  mongodb:
+      build:
+        context: ./mongodb
+        dockerfile: Dockerfile
+        args:
+          IMAGE_VERSION: non_serve
+      image: mymongo
+      container_name: mongodb
+      command: [ "docker-entrypoint.sh", "mongod" ]
+      restart: always
+      healthcheck:
+        test: |
+          host=`hostname --ip-address || echo '127.0.0.1'`;
+          mongo --quiet $${host}/test --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)' && echo 0 || echo 1
+        interval: 5s
+        retries: 3
+      environment:
+        - MIAVAR=non_serve3__solo_come_esempio
+        - MONGO_INITDB_DATABASE=dbsa
+      networks:
+        - interna
 
 networks:
   interna:
@@ -60,4 +174,3 @@ networks:
     driver_opts:
       com.docker.network.bridge.name: "br-esterna89012"
       com.docker.network.enable_ipv6: "false"
-

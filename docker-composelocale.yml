@@ -14,7 +14,7 @@ services:
     frontend:
         build:
           context: ./src/vue-frontend
-          dockerfile: Dockerfile  # Optional if your Dockerfile is named 'Dockerfile'
+          dockerfile: Dockerfile
         container_name: vue-frontend
         restart: unless-stopped
         ports:
@@ -164,7 +164,7 @@ services:
         context: ./mongodb
         dockerfile: Dockerfile
         args:
-          IMAGE_VERSION: non_serve # Corrected from list to mapping
+          IMAGE_VERSION: non_serve
       image: mymongo
       container_name: mongodb
       command: [ "docker-entrypoint.sh", "mongod" ]
@@ -178,11 +178,8 @@ services:
       environment:
         - MIAVAR=non_serve3__solo_come_esempio
         - MONGO_INITDB_DATABASE=dbsa
-      ports:
-        - "27017:27017"
       networks:
         - interna
-        - esterna
 
 
 networks:
