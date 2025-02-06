@@ -16,3 +16,8 @@ docker compose up -d
 
 docker-compose -f docker-composelocale.yml up --build
 
+## CONFIGURAZIONE DATABASE
+2 Utenti di prova sono già inseriti:
+
+a@gmail.com test
+b@gmail.com test
