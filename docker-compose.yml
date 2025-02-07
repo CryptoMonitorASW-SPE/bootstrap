@@ -12,7 +12,7 @@ x-common-env-variables: &common-env-variables
 
 services:
   frontend:
-    image: ghcr.io/cryptomonitorasw-spe/vue-frontend:latest
+    image: ghcr.io/cryptomonitorasw-spe/vue-frontend:1.0.0
     container_name: vue-frontend
     restart: unless-stopped
     ports:
@@ -27,7 +27,7 @@ services:
       <<: *common-env-variables
 
   crypto-market:
-    image: ghcr.io/cryptomonitorasw-spe/crypto-market:latest
+    image: ghcr.io/cryptomonitorasw-spe/crypto-market:0.4.1
     container_name: crypto-market
     restart: unless-stopped
     environment:
@@ -48,7 +48,7 @@ services:
       start_period: 5s
 
   event-dispatcher:
-    image: ghcr.io/cryptomonitorasw-spe/event-dispatcher:latest
+    image: ghcr.io/cryptomonitorasw-spe/event-dispatcher:0.4.1
     container_name: event-dispatcher
     restart: unless-stopped
     ports:
@@ -75,7 +75,7 @@ services:
       start_period: 5s
 
   authentication:
-    image: ghcr.io/cryptomonitorasw-spe/authentication:latest
+    image: ghcr.io/cryptomonitorasw-spe/authentication:1.1.1
     container_name: authentication
     restart: unless-stopped
     environment:
@@ -98,7 +98,7 @@ services:
       start_period: 5s
 
   user-management:
-    image: ghcr.io/cryptomonitorasw-spe/user-management:latest
+    image: ghcr.io/cryptomonitorasw-spe/user-management:1.0.0
     container_name: user-management
     restart: unless-stopped
     environment:
@@ -119,7 +119,7 @@ services:
       start_period: 5s
 
   notification:
-    image: ghcr.io/cryptomonitorasw-spe/notification:latest
+    image: ghcr.io/cryptomonitorasw-spe/notification:1.0.1
     container_name: notification
     restart: unless-stopped
     environment:
