@@ -1,186 +1,239 @@
-x-common-env-variables: &common-env-variables
-  AUTHENTICATION_SERVICE_NAME: authentication
-  AUTHENTICATION_SERVICE_PORT: 3000
-  CRYPTOMARKET_SERVICE_NAME: crypto-market
-  CRYPTOMARKET_SERVICE_PORT: 8080
-  USER_MANAGEMENT_SERVICE_NAME: user-management
-  USER_MANAGEMENT_SERVICE_PORT: 3000
-  NOTIFICATION_SERVICE_NAME: notification
-  NOTIFICATION_SERVICE_PORT: 8080
-  EVENT_DISPATCHER_SERVICE_NAME: event-dispatcher
-  EVENT_DISPATCHER_SERVICE_PORT: 3000
+# Base service definitions with anchors for individual services
+x-service-defs:
+  authentication-name: &auth-name authentication
+  authentication-port: &auth-port 3000
+  crypto-market-name: &crypto-name crypto-market
+  crypto-market-port: &crypto-port 3000
+  user-management-name: &user-name user-management
+  user-management-port: &user-port 3000
+  notification-name: &notif-name notification
+  notification-port: &notif-port 3000
+  event-dispatcher-name: &event-name event-dispatcher
+  event-dispatcher-port: &event-port 3000
+  frontend-name: &frontend-name frontend
+  frontend-port: &frontend-port 80
+  mongodb-name: &mongodb-name mongodb
+  mongodb-port: &mongodb-port 27017
+
+# authentication service environment variables
+x-auth-env: &auth-env
+  NAME: *auth-name
+  PORT: *auth-port
+  USER_MANAGEMENT_SERVICE_NAME: *user-name
+  USER_MANAGEMENT_SERVICE_PORT: *user-port
+  MONGODB_HOST: *mongodb-name
+  MONGODB_PORT: *mongodb-port
+
+# notification service environment variables
+x-notification-env: &notification-env
+  NAME: *notif-name
+  PORT: *notif-port
+  EVENT_DISPATCHER_SERVICE_NAME: *event-name
+  EVENT_DISPATCHER_SERVICE_PORT: *event-port
+  MONGODB_HOST: *mongodb-name
+  MONGODB_PORT: *mongodb-port
+
+# event-dispatcher service environment variables
+x-event-env: &event-env
+  NAME: *event-name
+  PORT: *event-port
+  FRONTEND_SERVICE_NAME: *frontend-name
+  FRONTEND_SERVICE_PORT: *frontend-port
+  NOTIFICATION_SERVICE_NAME: *notif-name
+  NOTIFICATION_SERVICE_PORT: *notif-port
+
+# crypto-market service environment variables
+x-crypto-env: &crypto-env
+  NAME: *crypto-name
+  PORT: *crypto-port
+  EVENT_DISPATCHER_SERVICE_NAME: *event-name
+  EVENT_DISPATCHER_SERVICE_PORT: *event-port
+  MONGODB_HOST: *mongodb-name
+  MONGODB_PORT: *mongodb-port
+
+# user-management service environment variables
+x-user-env: &user-env
+  NAME: *user-name
+  PORT: *user-port
+  MONGODB_HOST: *mongodb-name
+  MONGODB_PORT: *mongodb-port
+
+# frontend service environment variables
+x-frontend-env: &frontend-env
+  AUTHENTICATION_SERVICE_NAME: *auth-name
+  AUTHENTICATION_SERVICE_PORT: *auth-port
+  CRYPTOMARKET_SERVICE_NAME: *crypto-name
+  CRYPTOMARKET_SERVICE_PORT: *crypto-port
+  USER_MANAGEMENT_SERVICE_NAME: *user-name
+  USER_MANAGEMENT_SERVICE_PORT: *user-port
+  NOTIFICATION_SERVICE_NAME: *notif-name
+  NOTIFICATION_SERVICE_PORT: *notif-port
+  EVENT_DISPATCHER_SERVICE_NAME: *event-name
+  EVENT_DISPATCHER_SERVICE_PORT: *event-port
+  PORT: *frontend-port
 
 services:
-    frontend:
-        build:
-          context: ./src/vue-frontend
-          dockerfile: Dockerfile
-        container_name: vue-frontend
-        restart: unless-stopped
-        ports:
-          - "8080:80" # Host port 8080 maps to container port 80 (Nginx)
-        depends_on:
-          event-dispatcher:
-            condition: service_healthy
+  frontend:
+    build:
+      context: ./src/vue-frontend
+      dockerfile: Dockerfile
+    container_name: vue-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      event-dispatcher:
+        condition: service_healthy
+    networks:
+      - esterna
+      - interna
+    environment:
+      <<: *frontend-env
 
-        networks:
-          - esterna
-          - interna
-        
-        environment:
-          <<: *common-env-variables
+  crypto-market:
+    build:
+      context: ./src/crypto-market
+      dockerfile: Dockerfile  
+    container_name: crypto-market
+    restart: unless-stopped
+    environment:
+      <<: *crypto-env
+      COINGECKO_API_KEY: ${COINGECKO_API_KEY}
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - interna
+      - esterna
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
+  event-dispatcher:
+    build:
+      context: ./src/event-dispatcher
+      dockerfile: Dockerfile
+    container_name: event-dispatcher
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      <<: *event-env
+      JWT_SIMMETRIC_KEY: ${JWT_SIMMETRIC_KEY}
+    depends_on:
+      crypto-market:
+        condition: service_healthy  
+      authentication:
+        condition: service_healthy  
+      user-management:
+        condition: service_healthy
+      notification:
+        condition: service_healthy  
+    networks:
+      - interna
+      - esterna
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s  
 
-    crypto-market:
-      build:
-        context: ./src/crypto-market
-        dockerfile: Dockerfile  
-      container_name: crypto-market
-      restart: unless-stopped
-      environment:
-        - COINGECKO_API_KEY=${COINGECKO_API_KEY}
-      ports:
-        # You can access the service on localhost:8081, but it will be forwarded to the container's port 8080
-        - "8081:8080"
-      depends_on:
-        mongodb:
-          condition: service_healthy
-      networks:
-        - interna
-        - esterna
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
-        start_period: 5s
-
-
-    event-dispatcher:
-      build:
-        context: ./src/event-dispatcher
-        dockerfile: Dockerfile
-      container_name: event-dispatcher
-      restart: unless-stopped
-      ports:
-        - "3000:3000"
-      environment:
-        - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
-      depends_on:
-        crypto-market:
+  authentication:
+    build:
+      context: ./src/authentication
+      dockerfile: Dockerfile
+    container_name: authentication
+    restart: unless-stopped
+    environment:
+      <<: *auth-env
+      JWT_SIMMETRIC_KEY: ${JWT_SIMMETRIC_KEY}
+    ports:
+      - "3002:3000"
+    depends_on:
+       mongodb:
           condition: service_healthy  
-        authentication:
-          condition: service_healthy  
-        user-management:
-          condition: service_healthy
-        notification:
-          condition: service_healthy  
-      networks:
-        - interna
-        - esterna
-      healthcheck:
-        test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
-        start_period: 5s  
+    networks:
+      - interna
+      - esterna
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s    
 
-    authentication:
-      build:
-        context: ./src/authentication
-        dockerfile: Dockerfile
-      container_name: authentication
-      restart: unless-stopped
-      environment:
-        - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
-        - USER_MANAGEMENT_SERVICE_NAME=${USER_MANAGEMENT_SERVICE_NAME}
-        - USER_MANAGEMENT_SERVICE_PORT=${USER_MANAGEMENT_SERVICE_PORT}
-      ports:
-        - "3001:3000"
-      depends_on:
-         mongodb:
-            condition: service_healthy  
-      networks:
-        - interna
-        - esterna
-      healthcheck:
-        test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
-        start_period: 5s    
+  user-management:
+    build:
+      context: ./src/user-management
+      dockerfile: Dockerfile
+    container_name: user-management
+    restart: unless-stopped
+    environment:
+      <<: *user-env
+      JWT_SIMMETRIC_KEY: ${JWT_SIMMETRIC_KEY}
+    ports:
+      - "3003:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - interna
+      - esterna
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+ 
+  notification:
+    build:
+      context: ./src/notification
+      dockerfile: Dockerfile  
+    container_name: notification
+    restart: unless-stopped
+    environment:
+      <<: *notification-env
+      JWT_SIMMETRIC_KEY: ${JWT_SIMMETRIC_KEY}
+    ports:
+      - "3004:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - interna
+      - esterna
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s      
 
-    user-management:
-      build:
-        context: ./src/user-management
-        dockerfile: Dockerfile
-      container_name: user-management
-      restart: unless-stopped
-      environment:
-        - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
-      ports:
-        - "3002:3000"
-      depends_on:
-        mongodb:
-          condition: service_healthy
-      networks:
-        - interna
-        - esterna
-      healthcheck:
-        test: [ "CMD-SHELL", "curl -f http://localhost:3000/health"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
-        start_period: 5s
-   
-    notification:
-      build:
-        context: ./src/notification
-        dockerfile: Dockerfile  
-      container_name: notification
-      restart: unless-stopped
-      environment:
-        - JWT_SIMMETRIC_KEY=${JWT_SIMMETRIC_KEY}
-      ports:
-        # You can access by the host on localhost:8082, but it will be forwarded to the container's port 8080,
-        # inside docker network is notification:8080
-        - "8082:8080"
-      depends_on:
-        mongodb:
-          condition: service_healthy
-      networks:
-        - interna
-        - esterna
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
-        start_period: 5s      
-
-
-    mongodb:
-      build:
-        context: ./mongodb
-        dockerfile: Dockerfile
-        args:
-          IMAGE_VERSION: non_serve
-      image: mymongo
-      container_name: mongodb
-      command: [ "docker-entrypoint.sh", "mongod" ]
-      restart: always
-      healthcheck:
-        test: |
-          host=`hostname --ip-address || echo '127.0.0.1'`;
-          mongo --quiet $${host}/test --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)' && echo 0 || echo 1
-        interval: 5s
-        retries: 3
-      environment:
-        - MIAVAR=non_serve3__solo_come_esempio
-        - MONGO_INITDB_DATABASE=dbsa
-      networks:
-        - interna
-
+  mongodb:
+    build:
+      context: ./mongodb
+      dockerfile: Dockerfile
+    image: mymongo
+    container_name: mongodb
+    command: [ "docker-entrypoint.sh", "mongod" ]
+    restart: always
+    healthcheck:
+      test: |
+        host=`hostname --ip-address || echo '127.0.0.1'`;
+        mongo --quiet $${host}/test --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)' && echo 0 || echo 1
+      interval: 5s
+      retries: 3
+    environment:
+      - MONGO_INITDB_DATABASE=dbsa
+    networks:
+      - interna
 
 networks:
   interna:
