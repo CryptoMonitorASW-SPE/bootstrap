@@ -39,14 +39,17 @@ The project includes scripts for both Windows and Linux environments:
 
 - **Update Repositories:**  
   - Linux: `./update-projects.sh`  
-  - Windows: `./update-project.sh`
+  - Windows: `./update-project.ps1`  
+  *These scripts update all project repositories in the `src/` directory by fetching the latest changes, switching to the develop branch, and pulling updates.*
 
 - **Stop Services:**  
   - Linux: `./stop.sh`  
-  - Windows: `./stop.ps1`
+  - Windows: `./stop.ps1`  
+  *These scripts stop all running Docker containers defined in the docker-composelocale.yml file.*
 
 - **Rebuild Services:**  
   - Linux: `./rebuild.sh`  
-  - Windows: `./rebuild.ps1`
+  - Windows: `./rebuild.ps1`  
+  *These scripts rebuild all services except MongoDB (to preserve data), restart the containers, and safely restart MongoDB without stopping it to maintain data integrity.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
