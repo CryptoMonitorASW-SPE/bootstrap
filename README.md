@@ -39,7 +39,7 @@ The project includes scripts for both Windows and Linux environments:
 
 - **Update Repositories:**  
   - Linux: `./update-projects.sh`  
-  - Windows: *(If you have a corresponding PowerShell script, you can use that instead)*
+  - Windows: `./update-project.sh`
 
 - **Stop Services:**  
   - Linux: `./stop.sh`  
