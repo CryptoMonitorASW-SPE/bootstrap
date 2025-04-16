@@ -1,55 +1,127 @@
-# Welcome to the Bootstrap Project!
+# CryptoMonitor – Cryptocurrency Monitoring Platform
 
-## Required .env Variables
-Make sure to set the following environment variables:
-```
-COINGECKO_API_KEY=SECRETSECRET
-JWT_SIMMETRIC_KEY=${node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"}
-```
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Create MongoDB Image
-Run the following command to create the MongoDB image:
-```
-./CREATE_NOVOLUME_BASE_IMAGE
-```
+---
 
-## Run Projects from Online Packages
-Use the following command to start the projects:
-```
-docker compose up -d
-```
+## Overview
 
-## Run Projects Locally
+CryptoMonitor is a microservices-based web application designed to monitor and manage cryptocurrencies effectively. It offers real-time market data, personalized watchlists, interactive charts, and portfolio management tools. Whether you're a professional trader or a beginner, CryptoMonitor provides the tools to stay informed and make knowledge-based decisions.
 
-### Place the Projects in `src/`
-Use the following command to build and start the projects locally:
-```
-docker-compose -f docker-composelocale.yml up --build
-```
+### Project Details
 
-## Database Configuration
-Two test users are already inserted:
+- **University:** University of Bologna  
+- **Course:** Master's Degree in Computer Science and Engineering – Software Process Engineering Project
 
-- `a@gmail.com` with password `test`
-- `b@gmail.com` with password `test`
+#### Team Members
+
+- Alessandro Becci – alessandro.becci@studio.unibo.it
+- Ludovico Nollino – ludovico.nollino@studio.unibo.it
+- Luca Tonelli – luca.tonelli11@studio.unibo.it
+
+---
+
+## Live Documentation
+
+Access the full project documentation here:  
+[https://cryptomonitorasw-spe.github.io/documentation/](https://cryptomonitorasw-spe.github.io/documentation/)
+
+---
+
+## Features
+
+- **Real-Time Market Data:** Stay updated with live cryptocurrency prices and market trends.
+- **User Authentication:** Secure login and registration system.
+- **Personalized Watchlists:** Track your favorite cryptocurrencies.
+- **Interactive Charts:** Analyze historical data with customizable charts.
+- **Portfolio Management:** Monitor your investments and performance over time.
+- **Notifications:** Receive alerts for significant market changes.
+
+---
+
+## Setup Instructions
+
+1. **Environment Variables**
+
+  Create a `.env` file in the root directory and set the following variables:
+
+  ```bash
+  COINGECKO_API_KEY=YOUR_COINGECKO_API_KEY
+  JWT_SIMMETRIC_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+  ```
+
+2. **Build MongoDB Image**
+
+  Run the following script to create the MongoDB Docker image:
+
+  ```bash
+  ./CREATE_NOVOLUME_BASE_IMAGE
+  ```
+
+3. **Run Projects from Online Packages**
+
+  Start the services using Docker Compose:
+
+  ```bash
+  docker compose up -d
+  ```
+
+4. **Run Projects Locally**
+
+  Place the projects in the `src/` directory and use the following command:
+
+  ```bash
+  docker-compose -f docker-composelocale.yml up --build
+  ```
+
+5. **Database Configuration**
+
+  The database includes two test users:
+
+  - **User 1:**  
+    Email: a@gmail.com  
+    Password: test  
+
+  - **User 2:**  
+    Email: b@gmail.com  
+    Password: test
+
+---
 
 ## Available Scripts
 
-The project includes scripts for both Windows and Linux environments:
+### Update Repositories
 
-- **Update Repositories:**  
-  - Linux: `./update-projects.sh`  
-  - Windows: `./update-project.ps1`  
-  *These scripts update all project repositories in the `src/` directory by fetching the latest changes, switching to the develop branch, and pulling updates.*
+- **Linux:** `./update-projects.sh`
+- **Windows:** `./update-project.ps1`
 
-- **Stop Services:**  
-  - Linux: `./stop.sh`  
-  - Windows: `./stop.ps1`  
-  *These scripts stop all running Docker containers defined in the docker-composelocale.yml file.*
+_Updates all project repositories located in the `src/` directory._
 
-- **Rebuild Services:**  
-  - Linux: `./rebuild.sh`  
-  - Windows: `./rebuild.ps1`  
-  *These scripts rebuild all services except MongoDB (to preserve data), restart the containers, and safely restart MongoDB without stopping it to maintain data integrity.*
+### Stop Services
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+- **Linux:** `./stop.sh`
+- **Windows:** `./stop.ps1`
+
+_Stops all running Docker containers defined in `docker-composelocale.yml`._
+
+### Rebuild Services
+
+- **Linux:** `./rebuild.sh`
+- **Windows:** `./rebuild.ps1`
+
+_Rebuilds all services except MongoDB to preserve data integrity._
+
+---
+
+## Continuous Integration (CI)
+
+- **Git Hooks:** Pre-commit and pre-push hooks enforce code standards and run tests before changes are committed or pushed.
+- **Branch Management:** A structured branching strategy manages feature development, releases, and hotfixes.
+- **Build Automation:** Automated scripts handle building and testing to catch issues early in the development cycle.
+- **Dockerized Environment:** Docker ensures consistency across development, testing, and production environments.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
